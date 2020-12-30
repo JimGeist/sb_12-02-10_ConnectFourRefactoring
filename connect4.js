@@ -5,7 +5,7 @@
  * board fills (tie)
  */
 
-let currPlayer = 1; // active player: 1 or 2
+
 
 class Game {
 
@@ -36,6 +36,15 @@ class Game {
       }
     }
 
+    this.pxBoardVal = "";
+    this.p1Color = "";
+    this.p1BoardVal = 1;
+    this.p2Color = "";
+    this.p2BoardVal = 2;
+
+
+    this.playerReset();
+
     this.HEIGHT = +inHeight;
     this.WIDTH = +inWidth;
 
@@ -43,12 +52,19 @@ class Game {
 
     this.bindButtonStart();
 
-    //this.makeBoard();
-    //this.makeHtmlBoard();
-
-    //console.log("end of Constructor");
 
   }
+
+
+  getBoardHeight() {
+    return this.HEIGHT;
+  }
+
+
+  getBoardWidth() {
+    return this.WIDTH;
+  }
+
 
   isGameOver() {
     return this.gameOver;
@@ -62,20 +78,84 @@ class Game {
     this.gameOver = false;
   }
 
-  // Make the game board
-  makeBoard() {
 
-    this.board = [];
-    for (let y = 0; y < this.HEIGHT; y++) {
-      this.board.push(Array.from({ length: this.WIDTH }));
+  playerSwap() {
+
+    // swap the players
+    this.pxBoardVal === this.p1BoardVal ? this.pxBoardVal = this.p2BoardVal : this.pxBoardVal = this.p1BoardVal;
+
+  }
+
+
+  playerReset() {
+
+    this.pxBoardVal = this.p1BoardVal;
+
+  }
+
+
+  playerGetColor() {
+
+    // return the color for the current player
+    if (this.pxBoardVal === this.p1BoardVal) {
+      return this.p1Color;
+    } else {
+      return this.p2Color;
     }
 
   }
 
+  playerSetColor(inPlayer, inColor) {
+
+    // sets the color for the identified player
+    if (inColor.length > 0) {
+      if (inPlayer === 1) {
+        // make sure color is already in play
+        // UI should also enforce
+        if (inColor !== this.p2Color) {
+          this.p1Color = inColor;
+        }
+
+      } else {
+        // it is only a 2 player game, so this must be 2
+        if (inColor !== this.p1Color) {
+          this.p2Color = inColor;
+        }
+
+      }
+
+    }
+
+  }
+
+
+  playerGetNumber() {
+
+    // return the number for the current player
+    if (this.pxBoardVal === this.p1BoardVal) {
+      return this.p1BoardVal;
+    } else {
+      return this.p2BoardVal;
+    }
+
+  }
+
+
+  // Make the game board
+  makeBoard() {
+
+    this.board = [];
+    for (let y = 0; y < this.getBoardHeight(); y++) {
+      this.board.push(Array.from({ length: this.getBoardWidth() }));
+    }
+
+  }
+
+
   /** findSpotForCol: given column x, return top empty y (null if filled) */
 
   findSpotForCol(x) {
-    for (let y = this.HEIGHT - 1; y >= 0; y--) {
+    for (let y = this.getBoardHeight() - 1; y >= 0; y--) {
       if (!this.board[y][x]) {
         return y;
       }
@@ -89,7 +169,7 @@ class Game {
   placeInTable(y, x) {
     const piece = document.createElement('div');
     piece.classList.add('piece');
-    piece.classList.add(`p${currPlayer}`);
+    piece.style.backgroundColor = this.playerGetColor();
     piece.style.top = -50 * (y + 2);
 
     const spot = document.getElementById(`${y}-${x}`);
@@ -109,20 +189,21 @@ class Game {
     const _win = (cells) => {
       // Check four cells to see if they're all color of current player
       //  - cells: list of four (y, x) cells
-      //  - returns true if all are legal coordinates & all match currPlayer
+      //  - returns true if all are legal coordinates & all match the player
+      //    returned by playerGetNumber (the current player)
 
       return cells.every(
         ([y, x]) =>
           y >= 0 &&
-          y < this.HEIGHT &&
+          y < this.getBoardHeight() &&
           x >= 0 &&
-          x < this.WIDTH &&
-          this.board[y][x] === currPlayer
+          x < this.getBoardWidth() &&
+          this.board[y][x] === this.playerGetNumber()
       );
     };
 
-    for (let y = 0; y < this.HEIGHT; y++) {
-      for (let x = 0; x < this.WIDTH; x++) {
+    for (let y = 0; y < this.getBoardHeight(); y++) {
+      for (let x = 0; x < this.getBoardWidth(); x++) {
         // get "check list" of 4 cells (starting here) for each of the different
         // ways to win
         const horiz = [[y, x], [y, x + 1], [y, x + 2], [y, x + 3]];
@@ -153,13 +234,13 @@ class Game {
       }
 
       // place piece in board and add to HTML table
-      this.board[y][x] = currPlayer;
+      this.board[y][x] = this.playerGetNumber();
       this.placeInTable(y, x);
 
       // check for win
       if (this.checkForWin()) {
         this.setGameIsOver();
-        return this.endGame(`Player ${currPlayer} won!`);
+        return this.endGame(`Player ${this.playerGetNumber()} (${this.playerGetColor()}) won!`);
 
       }
 
@@ -170,7 +251,7 @@ class Game {
       }
 
       // switch players
-      currPlayer = currPlayer === 1 ? 2 : 1;
+      this.playerSwap();
 
     }
   }
@@ -184,8 +265,19 @@ class Game {
     // html board is rebuilt
     // gameOver flag is set to false
 
-    currPlayer = 1;
+    if (this.playerGetColor() === "") {
+      console.log("do color stuff")
+      const frmSelectP1 = document.getElementById("p1-colors");
+      const frmSelectP2 = document.getElementById("p2-colors");
+      this.playerSetColor(1, frmSelectP1.value);
+      this.playerSetColor(2, frmSelectP2.value);
 
+      const colorSelect = document.getElementById("color-selection")
+      colorSelect.classList.add("hide");
+
+    }
+
+    this.playerReset();
     this.makeBoard();
     const board = document.getElementById('board');
     board.innerHTML = '';
@@ -217,7 +309,7 @@ class Game {
     this.boundHandleClick = this.handleClick.bind(this);
     top.addEventListener('click', this.boundHandleClick);
 
-    for (let x = 0; x < this.WIDTH; x++) {
+    for (let x = 0; x < this.getBoardWidth(); x++) {
       const headCell = document.createElement('td');
       headCell.setAttribute('id', x);
       top.append(headCell);
@@ -226,10 +318,10 @@ class Game {
     board.append(top);
 
     // make main part of board
-    for (let y = 0; y < this.HEIGHT; y++) {
+    for (let y = 0; y < this.getBoardHeight(); y++) {
       const row = document.createElement('tr');
 
-      for (let x = 0; x < this.WIDTH; x++) {
+      for (let x = 0; x < this.getBoardWidth(); x++) {
         const cell = document.createElement('td');
         cell.setAttribute('id', `${y}-${x}`);
         row.append(cell);
@@ -241,15 +333,6 @@ class Game {
   }
 
 
-  getBoardHeight() {
-    return this.HEIGHT;
-  }
-
-
-  getBoardWidth() {
-    return this.WIDTH;
-  }
-
 }
 
-let game42 = new Game(6, 7)
+let game6x7 = new Game(6, 7, "black", "green")

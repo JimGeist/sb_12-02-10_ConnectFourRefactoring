@@ -6,12 +6,33 @@
 </head>
 
 <body>
-
+  <h1>Connect Four</h1>
   <div id="game">
     <table id="board"></table>
   </div>
+  <div id="color-selection">
+    <label for="p1-colors">Player 1: Choose your color:</label>
+    <select id="p1-colors" name="p1colors">
+      <option value="mediumvioletred">violet red</option>
+      <option value="red">red</option>
+      <option value="orangered">orange red</option>
+      <option value="orange">orange</option>
+      <option value="gold">gold</option>
+      <option value="khaki">khaki</option>
+    </select>
+    <label for="p2-colors">Player 2: Choose your color:</label>
+    <select id="p2-colors" name="p2colors">
+      <option value="violet">violet</option>
+      <option value="blueviolet">blue violet</option>
+      <option value="blue">blue</option>
+      <option value="darkcyan">dark cyan</option>
+      <option value="green">green</option>
+      <option value="yellowgreen">yellow green</option>
+    </select>
+  </div>
   <div>
     <button id="start-button">Start Game</button>
+
   </div>
   <script src="connect4.js"></script>
 
